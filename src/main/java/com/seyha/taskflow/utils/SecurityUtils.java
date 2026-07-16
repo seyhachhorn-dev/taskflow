@@ -1,5 +1,6 @@
 package com.seyha.taskflow.utils;
 
+import com.seyha.taskflow.core.security.SecurityUser;
 import com.seyha.taskflow.domain.User;
 import com.seyha.taskflow.enums.Role;
 import org.springframework.security.core.Authentication;
@@ -24,8 +25,8 @@ public final class SecurityUtils {
     /** Returns the current user if present (empty for public endpoints). */
     public static Optional<User> findCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.getPrincipal() instanceof User user) {
-            return Optional.of(user);
+        if (auth != null && auth.getPrincipal() instanceof SecurityUser securityUser) {
+            return Optional.of(securityUser.getUser());
         }
         return Optional.empty();
     }

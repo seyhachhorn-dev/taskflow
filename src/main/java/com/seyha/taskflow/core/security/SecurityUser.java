@@ -18,6 +18,10 @@ public class SecurityUser implements UserDetails {
     // Helper to get the underlying entity if needed (e.g. to get ID for JWT)
     private final User user;
 
+    public User getUser() {
+        return user;
+    }
+
     @Override
     public @Nullable String getPassword() {
         return user.getPassword();
