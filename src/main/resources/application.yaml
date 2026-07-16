@@ -1,6 +1,6 @@
 spring:
   application:
-    name: authentication
+    name: taskflow
   datasource:
     url: jdbc:postgresql://localhost:5444/taskflow_db
     username: seyha
