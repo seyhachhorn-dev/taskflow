@@ -2,7 +2,7 @@ spring:
   application:
     name: authentication
   datasource:
-    url: jdbc:postgresql://localhost:5444/auth_db
+    url: jdbc:postgresql://localhost:5444/taskflow_db
     username: seyha
     password: seyha123
   jpa:
