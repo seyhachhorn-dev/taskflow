@@ -1,11 +1,13 @@
 package com.seyha.taskflow.service.impl;
 
+import com.seyha.taskflow.core.config.RabbitConfig;
 import com.seyha.taskflow.domain.Task;
 import com.seyha.taskflow.domain.User;
 import com.seyha.taskflow.dto.task.TaskRequest;
 import com.seyha.taskflow.dto.task.TaskResponse;
 import com.seyha.taskflow.enums.PriorityStatus;
 import com.seyha.taskflow.enums.TaskStatus;
+import com.seyha.taskflow.event.TaskEventPublisher;
 import com.seyha.taskflow.repository.ProjectRepository;
 import com.seyha.taskflow.repository.TaskRepository;
 import com.seyha.taskflow.repository.UserRepository;
@@ -29,6 +31,7 @@ public class TaskServiceImpl implements TaskService {
     private final ProjectService projectService;
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
+    private final TaskEventPublisher eventPublisher;
 
 
     @Override
@@ -42,6 +45,7 @@ public class TaskServiceImpl implements TaskService {
                 .build();
         Task saved = taskRepository.save(task);
         // Sprint 2: publish "task.created" event here
+        eventPublisher.publish(RabbitConfig.RK_CREATED,saved,"CREATED");
         return TaskResponse.from(saved);
     }
 
@@ -67,6 +71,9 @@ public class TaskServiceImpl implements TaskService {
         task.setStatus(status);
         Task saved = taskRepository.save(task);
         // Sprint 2: publish "task.completed" event when status == DONE
+        if(status == TaskStatus.DONE){
+            eventPublisher.publish(RabbitConfig.RK_COMPLETED,saved,"COMPLETED");
+        }
         return TaskResponse.from(saved);
     }
 
@@ -78,6 +85,7 @@ public class TaskServiceImpl implements TaskService {
         task.setAssignee(assignee);
         Task saved = taskRepository.save(task);
         // Sprint 2: publish "task.assigned" event here
+        eventPublisher.publish(RabbitConfig.RK_ASSIGNED, saved, "ASSIGNED");
         return TaskResponse.from(saved);
     }
 

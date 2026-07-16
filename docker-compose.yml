@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: taskflow
+    container_name: taskflow-postgres
     environment:
       POSTGRES_USER: seyha
       POSTGRES_PASSWORD: seyha123
@@ -10,6 +10,56 @@ services:
       - "5444:5432"
     volumes:
       - auth_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U seyha -d taskflow_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: taskflow-rabbitmq
+    ports:
+      - "5672:5672"      # AMQP
+      - "15672:15672"    # management UI
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  task-service:
+    build:
+      context: ./task-service
+    container_name: taskflow-task-service
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/taskflow_db
+      SPRING_DATASOURCE_USERNAME: seyha
+      SPRING_DATASOURCE_PASSWORD: seyha123
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SECURITY_JWT_SECRET_KEY: "c2V5aGEtdGFza2Zsb3ctc3VwZXItc2VjcmV0LWtleS0yMDI2LXZlcnktbG9uZw=="
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+  notification-service:
+    build:
+      context: ./notification-service
+    container_name: taskflow-notification-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:
